@@ -1,0 +1,28 @@
+# Python specific
+*.pyc
+*.log
+
+# Virtual Environment
+.venv/
+
+# Environment variables
+.env
+
+# IDE specific
+.vscode/
+.idea/
+
+# Dependency management
+Pipfile.lock
+poetry.lock
+
+# Compiled files
+/build/
+/dist/
+*.egg-info/
+
+# User-specific
+.DS_Store
+
+# Data folder
+data/

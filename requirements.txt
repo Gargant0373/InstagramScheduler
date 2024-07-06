@@ -1,3 +1,4 @@
 instagrapi
 python-dotenv
 schedule
+pillow

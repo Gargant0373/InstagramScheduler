@@ -10,6 +10,7 @@ from config import get_config
 IMAGES_FOLDER = 'data/images'
 POSTED_IMAGES_FILE = 'data/posted_images.txt'
 CAPTIONS_FILE = 'data/captions.txt'
+CAPTIONS_SUFFIX_FILE = 'data/caption_suffix.txt'
 
 def ensure_directories_and_files():
     """
@@ -25,6 +26,10 @@ def ensure_directories_and_files():
     if not os.path.exists(POSTED_IMAGES_FILE):
         with open(POSTED_IMAGES_FILE, 'w') as f:
             pass  # Just create an empty file
+
+    if not os.path.exists(CAPTIONS_SUFFIX_FILE):
+        with open(CAPTIONS_SUFFIX_FILE, 'w') as f:
+            f.write("\n") # Create file with an empty suffix
     
     if not os.path.exists(CAPTIONS_FILE):
         with open(CAPTIONS_FILE, 'w') as f:
@@ -59,6 +64,19 @@ def get_unposted_images(images):
     
     unposted_images = [img for img in images if img not in posted_images]
     return unposted_images
+
+def read_caption_suffix_from_file():
+    """
+    Read the caption suffix from caption_suffix.txt.
+    If the file does not exist, return an empty string.
+    """
+    if not os.path.exists(CAPTIONS_SUFFIX_FILE):
+        return ""
+    
+    with open(CAPTIONS_SUFFIX_FILE, 'r') as f:
+        suffix = f.read()
+    
+    return suffix.strip()
 
 def read_captions_from_file():
     """
@@ -100,9 +118,10 @@ def scheduler(cl):
     captions = read_captions_from_file()
     image_to_post = unposted_images[0]
     caption_to_post = random.choice(captions)
+    caption_suffix = read_caption_suffix_from_file()
     
     def job():
-        post_image(cl, image_to_post, caption_to_post)
+        post_image(cl, image_to_post, caption_to_post + caption_suffix)
     
     # Schedule the job to run every day at 16:00
     schedule.every().day.at("16:00").do(job)
@@ -118,8 +137,8 @@ def scheduler(cl):
         os.system('cls' if os.name == 'nt' else 'clear')
         print(f'Time left until next post: {time_left_str}')
         print(f'Next image to post: {image_to_post}')
-        print(f'Next caption: {caption_to_post}\n\nCall us for reservations +40721373747\n\n#brasov')
-
+        print(f'Next caption: {caption_to_post}\n{caption_suffix}')
+        
         schedule.run_pending()
         time.sleep(1)
 

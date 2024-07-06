@@ -1,15 +1,9 @@
 
 # Instagram Scheduler
 
-  
-
 Automatically schedule and post images with captions to Instagram using Python and Instagrapi.
 
-  
-
 ## Table of Contents
-
-  
 
 - [Overview](#overview)
 
@@ -25,23 +19,13 @@ Automatically schedule and post images with captions to Instagram using Python a
 
 - [License](#license)
 
-  
-
 ## Overview
-
-  
 
 Instagram Scheduler is a Python script that allows you to schedule the posting of images to Instagram at a specific time each day. It reads images from a designated folder, selects one that hasn't been posted yet, and posts it with a randomly chosen caption from a text file.
 
-  
-
 The script utilizes the Instagrapi library for interacting with Instagram and provides a simple scheduling mechanism using the `schedule` library.
 
-  
-
 ## Features
-
-  
 
 - Automatically post images to Instagram at a scheduled time each day.
 
@@ -51,20 +35,14 @@ The script utilizes the Instagrapi library for interacting with Instagram and pr
 
 - Easy setup and configuration through a `.env` file for Instagram credentials.
 
-  
-
 ## Installation
-
-  
 
 1. Clone the repository:
 
 ```
-git clone todo
+git clone https://github.com/Gargant0373/InstagramScheduler
 cd instagram-scheduler
 ```
-
-  
 
 2. Install dependencies:
 
@@ -72,8 +50,6 @@ cd instagram-scheduler
 pip install -r requirements.txt
 ```
 
-  
-  
 
 3. Set up environment variables:
 
@@ -89,11 +65,7 @@ ACCOUNT_PASSWORD=your_instagram_password
 
 ```
 
-  
-
 ## Usage
-
-  
 
 Run the script to start scheduling and posting images to Instagram:
 
@@ -101,19 +73,11 @@ Run the script to start scheduling and posting images to Instagram:
 python main.py
 ```
 
-  
-
 The script will run indefinitely, scheduling posts for each day at 16:00 (4:00 PM) local time.
-
-  
 
 ## Configuration
 
-  
-
 Ensure the following directories and files exist and are accessible:
-
-  
 
 -  `data/images/`: Store your images here.
 
@@ -121,22 +85,14 @@ Ensure the following directories and files exist and are accessible:
 
 -  `data/captions.txt`: Store captions for posts.
 
-  
+- `data/caption_suffix.txt`: Store constant suffixes (hashtags, etc).
 
 Modify `data/captions.txt` with your desired captions, each on a new line.
 
-  
-
 ## Contributing
-
-  
 
 Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or create a pull request.
 
-  
-
 ## License
-
-  
 
 This project is licensed under the MIT License - see the LICENSE file for details.
