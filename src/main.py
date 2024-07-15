@@ -76,7 +76,7 @@ def read_caption_suffix_from_file():
     with open(CAPTIONS_SUFFIX_FILE, 'r') as f:
         suffix = f.read()
     
-    return suffix.strip()
+    return suffix
 
 def read_captions_from_file():
     """
@@ -96,7 +96,6 @@ def post_image(cl, image_path, caption):
     Post an image to Instagram with a specific caption.
     Adds a specific call to action and hashtag to the caption.
     """
-    caption += '\n\nCall us for reservations +40721373747\n\n#brasov'
     try:
         cl.photo_upload(image_path, caption=caption)
         print(f'Successfully posted {image_path} with caption: "{caption}"')
@@ -121,7 +120,8 @@ def scheduler(cl):
     caption_suffix = read_caption_suffix_from_file()
     
     def job():
-        post_image(cl, image_to_post, caption_to_post + caption_suffix)
+        full_caption = f"{caption_to_post}{caption_suffix}"
+        post_image(cl, image_to_post, full_caption)
     
     # Schedule the job to run every day at 16:00
     schedule.every().day.at("16:00").do(job)
