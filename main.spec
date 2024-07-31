@@ -1,41 +1,53 @@
-block_cipher = None
+# -*- mode: python ; coding: utf-8 -*-
 
+import os
+from PyInstaller.utils.hooks import collect_data_files
+
+# Define paths
+src_dir = 'src'
+data_dir = 'data'
+icon_file = 'ig.ico'
+
+# Define the main script
+main_script = os.path.join(src_dir, 'main.py')
+
+# List of additional data files to include
+datas = [(data_dir, 'data')]
+
+# PyInstaller Analysis
 a = Analysis(
-    ['src/main.py'],
-    pathex=['src'],
+    [main_script],
+    pathex=['.'],
     binaries=[],
-    datas=[
-        ('data/', 'data'),
-        ('.env', '.')
-    ],
+    datas=datas,
     hiddenimports=[],
     hookspath=[],
+    hooksconfig={},
     runtime_hooks=[],
     excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
+    cipher=None,
     noarchive=False,
 )
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
+# Create a bundled executable
+pyz = PYZ(a.pure, a.zipped_data)
 exe = EXE(
     pyz,
     a.scripts,
     [],
     exclude_binaries=True,
-    name='main',
+    name='instagram_scheduler',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=True,
+    console=False,  # Set to True if you need a console window
+    icon=icon_file,
     disable_windowed_traceback=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
+    argv_emulation=False,
 )
 
+# Collect everything into the final bundle
 coll = COLLECT(
     exe,
     a.binaries,
@@ -44,5 +56,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='main',
+    name='instagram_scheduler'
 )
