@@ -84,15 +84,19 @@ def main():
     """
     Main function to set up and run the Tkinter GUI.
     """
-    global root, status_label, next_post_label, time_left_label, next_image_label
+    global root, status_label, next_post_label, time_left_label, next_image_label, profile_pic_label, username_label
 
     root = tk.Tk()
     root.title("Instagram Scheduler")
-    root.geometry("400x400")
+    root.geometry("400x500")
 
-    # Status label
+    # Status label at the bottom left
     status_label = ttk.Label(root, text="Status: Logging in...")
-    status_label.pack(pady=10)
+    status_label.place(x=10, y=470)
+
+    # Signature label at the bottom right
+    love_label = ttk.Label(root, text="Created with Love by Gargant")
+    love_label.place(x=230, y=470)
 
     # Next post label
     next_post_label = ttk.Label(root, text="Next post caption:\nN/A", anchor='w')
