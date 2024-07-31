@@ -1,165 +1,97 @@
-import os
+import tkinter as tk
+from tkinter import ttk
+from threading import Thread
+from datetime import datetime
+from PIL import Image, ImageTk
 import schedule
 import time
-import random
-from instagrapi import Client
-from datetime import datetime, timedelta
-
 from config import get_config
+import instagram_scheduler as ig
 
-IMAGES_FOLDER = 'data/images'
-POSTED_IMAGES_FILE = 'data/posted_images.txt'
-CAPTIONS_FILE = 'data/captions.txt'
-CAPTIONS_SUFFIX_FILE = 'data/caption_suffix.txt'
+def login_and_start_scheduler():
+    username, password = get_config()
+    client = ig.login_instagram(username, password)
+    status_label.config(text="Status: Logged in")
+    ig.ensure_directories_and_files()
 
-def ensure_directories_and_files():
-    """
-    Ensure that necessary directories and files exist.
-    - Create the images folder if it does not exist.
-    - Create the posted images file if it does not exist.
-    - Create the captions file if it does not exist, and add a default caption.
-    """
-    # Create directories if they do not exist
-    os.makedirs(IMAGES_FOLDER, exist_ok=True)
-    
-    # Create files if they do not exist
-    if not os.path.exists(POSTED_IMAGES_FILE):
-        with open(POSTED_IMAGES_FILE, 'w') as f:
-            pass  # Just create an empty file
+    scheduler_thread = Thread(target=ig.scheduler, args=(client, update_status, update_next_image))
+    scheduler_thread.daemon = True
+    scheduler_thread.start()
 
-    if not os.path.exists(CAPTIONS_SUFFIX_FILE):
-        with open(CAPTIONS_SUFFIX_FILE, 'w') as f:
-            f.write("\n") # Create file with an empty suffix
-    
-    if not os.path.exists(CAPTIONS_FILE):
-        with open(CAPTIONS_FILE, 'w') as f:
-            f.write("No caption available\n")  # Create file with a default caption
+def update_status(status_message):
+    status_label.config(text=f"Status: {status_message}")
 
-def read_images_from_folder():
+def resize_image(image, max_width, max_height):
     """
-    Read images from the images folder and return a list of image file paths.
-    Only files with extensions 'png', 'jpg', or 'jpeg' are included.
+    Resize image while maintaining aspect ratio to fit within the specified dimensions.
     """
-    images = [os.path.join(IMAGES_FOLDER, img) for img in os.listdir(IMAGES_FOLDER) if img.lower().endswith(('png', 'jpg', 'jpeg'))]
-    return images
+    img_width, img_height = image.size
+    aspect_ratio = img_width / img_height
 
-def mark_image_as_posted(image_path):
-    """
-    Mark an image as posted by adding its path to the posted images file.
-    This prevents the same image from being posted multiple times.
-    """
-    with open(POSTED_IMAGES_FILE, 'a') as f:
-        f.write(image_path + '\n')
+    if img_width > max_width or img_height > max_height:
+        if (max_width / aspect_ratio) < max_height:
+            new_width = max_width
+            new_height = int(max_width / aspect_ratio)
+        else:
+            new_width = int(max_height * aspect_ratio)
+            new_height = max_height
+    else:
+        new_width = img_width
+        new_height = img_height
 
-def get_unposted_images(images):
-    """
-    Get the list of images that have not yet been posted.
-    This is determined by checking the posted images file.
-    """
-    if not os.path.exists(POSTED_IMAGES_FILE):
-        return images
-    
-    with open(POSTED_IMAGES_FILE, 'r') as f:
-        posted_images = f.read().splitlines()
-    
-    unposted_images = [img for img in images if img not in posted_images]
-    return unposted_images
+    return image.resize((new_width, new_height), Image.LANCZOS)
 
-def read_caption_suffix_from_file():
-    """
-    Read the caption suffix from caption_suffix.txt.
-    If the file does not exist, return an empty string.
-    """
-    if not os.path.exists(CAPTIONS_SUFFIX_FILE):
-        return ""
-    
-    with open(CAPTIONS_SUFFIX_FILE, 'r') as f:
-        suffix = f.read()
-    
-    return suffix
+def update_next_image(image_path, caption):
+    if image_path != "No more images":
+        # Display caption in two lines
+        next_post_label.config(text=f"Next post caption:\n{caption}")
+        
+        img = Image.open(image_path)
+        img = resize_image(img, 200, 200)  # Resize while maintaining aspect ratio
+        img = ImageTk.PhotoImage(img)
+        next_image_label.config(image=img)
+        next_image_label.image = img
+    else:
+        # Display message for no more images
+        next_post_label.config(text="No more images to post.")
+        next_image_label.config(image='')
 
-def read_captions_from_file():
-    """
-    Read captions from the captions file and return a list of captions.
-    If the file does not exist, return a list with a default caption.
-    """
-    if not os.path.exists(CAPTIONS_FILE):
-        return ["No caption available"]
-    
-    with open(CAPTIONS_FILE, 'r') as f:
-        captions = f.read().splitlines()
-    
-    return captions
-
-def post_image(cl, image_path, caption):
-    """
-    Post an image to Instagram with a specific caption.
-    Adds a specific call to action and hashtag to the caption.
-    """
+def update_ui():
     try:
-        cl.photo_upload(image_path, caption=caption)
-        print(f'Successfully posted {image_path} with caption: "{caption}"')
-        mark_image_as_posted(image_path)
-    except Exception as e:
-        print(f'Failed to post {image_path}: {e}')
-
-def scheduler(cl):
-    """
-    Schedule a job to post an image every day at 16:00.
-    """
-    images = read_images_from_folder()
-    unposted_images = get_unposted_images(images)
-    
-    if not unposted_images:
-        print('No unposted images available.')
-        return
-    
-    captions = read_captions_from_file()
-    image_to_post = unposted_images[0]
-    caption_to_post = random.choice(captions)
-    caption_suffix = read_caption_suffix_from_file()
-    
-    def job():
-        full_caption = f"{caption_to_post}{caption_suffix}"
-        post_image(cl, image_to_post, full_caption)
-    
-    # Schedule the job to run every day at 16:00
-    schedule.every().day.at("16:00").do(job)
-    
-    while True:
-        now = datetime.now()
         next_run = schedule.next_run()
+        now = datetime.now()
         time_left = next_run - now
-        
-        # Format time left as HH:MM:SS
         time_left_str = str(time_left).split('.')[0]
-        
-        os.system('cls' if os.name == 'nt' else 'clear')
-        print(f'Time left until next post: {time_left_str}')
-        print(f'Next image to post: {image_to_post}')
-        print(f'Next caption: {caption_to_post}\n{caption_suffix}')
-        
-        schedule.run_pending()
-        time.sleep(1)
+
+        time_left_label.config(text=f"Time left until next post: {time_left_str}")
+    except:
+        pass
+    
+    root.after(1000, update_ui)
 
 def main():
-    """
-    Main function to run the script.
-    - Ensures directories and files exist.
-    - Logs into Instagram.
-    - Schedules the posting of images.
-    """
-    ensure_directories_and_files()
+    global root, status_label, next_post_label, time_left_label, next_image_label
+
+    root = tk.Tk()
+    root.title("Instagram Scheduler")
+    root.geometry("400x400")
+
+    status_label = ttk.Label(root, text="Status: Logging in...")
+    status_label.pack(pady=10)
+
+    next_post_label = ttk.Label(root, text="Next post caption:\nN/A", anchor='w')
+    next_post_label.pack(pady=10, padx=10, fill='x')
+
+    next_image_label = ttk.Label(root)
+    next_image_label.pack(pady=10)
+
+    time_left_label = ttk.Label(root, text="Time left until next post: N/A")
+    time_left_label.pack(pady=10)
+
+    login_and_start_scheduler()
+    update_ui()
     
-    print("Logging in...")
-    
-    # Get Instagram credentials from the config file
-    (username, password) = get_config()
-    cl = Client()
-    cl.login(username, password)
-    
-    # Schedule the posting of images
-    scheduler(cl)
-    
+    root.mainloop()
+
 if __name__ == '__main__':
     main()
