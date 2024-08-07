@@ -105,7 +105,7 @@ def scheduler(cl, update_status_callback, update_next_image_callback):
     caption_suffix = read_caption_suffix_from_file()
     
     def job():
-        image_to_post = unposted_images[0]
+        image_to_post = random.choice(unposted_images)
         caption_to_post = random.choice(captions)
         full_caption = f"{caption_to_post}{caption_suffix}"
         result = post_image(cl, image_to_post, full_caption)
