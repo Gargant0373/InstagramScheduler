@@ -96,7 +96,7 @@ def scheduler(cl, update_status_callback, update_next_image_callback):
     """
     images = read_images_from_folder()
     unposted_images = get_unposted_images(images)
-    
+
     if not unposted_images:
         update_status_callback('No unposted images available.')
         return
@@ -110,17 +110,18 @@ def scheduler(cl, update_status_callback, update_next_image_callback):
         full_caption = f"{caption_to_post}{caption_suffix}"
         result = post_image(cl, image_to_post, full_caption)
         update_status_callback(result)
-        unposted_images.pop(0)
+        unposted_images.remove(image_to_post)
         if unposted_images:
-            update_next_image_callback(unposted_images[0], full_caption)
+            update_next_image_callback(image_to_post, full_caption)
         else:
             update_next_image_callback("No more images", "")
 
     schedule.every().day.at("16:00").do(job)
     
-    # Call update_next_image_callback initially
     if unposted_images:
-        update_next_image_callback(unposted_images[0], f"{random.choice(captions)}\n{caption_suffix}")
+        next_image = random.choice(unposted_images)
+        next_caption = random.choice(captions)
+        update_next_image_callback(next_image, f"{next_caption}{caption_suffix}")
     else:
         update_next_image_callback("No more images", "")
     
